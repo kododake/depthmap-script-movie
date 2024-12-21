@@ -126,8 +126,7 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
 
     print('All done. Video(s) saved!')
-    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
-
+    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) is 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
 
 from src.stereoimage_generation import create_stereoimages
 
