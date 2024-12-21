@@ -18,7 +18,16 @@ generation_options = {
     go.STEREO_FILL_ALGO.name.lower(): 'polylines_sharp'
 }
 
-# Remove the device argument from the gen_video call
-result = gen_video(input_video_path, output_path, generation_options)
+# Function to check GPU utilization
+def check_gpu():
+    if torch.cuda.is_available():
+        print("GPU is available and being used.")
+    else:
+        print("GPU is not available. Using CPU.")
+
+check_gpu()
+
+# Pass the device to gen_video function if needed
+result = gen_video(input_video_path, output_path, generation_options, device=device)
 
 print(result)
