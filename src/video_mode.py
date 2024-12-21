@@ -63,7 +63,7 @@ def open_path_as_images(path, maybe_depthvideo=False, device=device):
         for frame in clip.iter_frames():
             img = torch.tensor(np.array(frame))
             frames.append(img.to(device))
-            if torch.cuda.memory_allocated(device) > 8 * 1024 * 1024 * 1024:  # 20GB limit
+            if torch.cuda.memory_allocated(device) > 7.3 * 1024 * 1024 * 1024:  # 20GB limit
                 break
         return clip.fps, frames
     else:
