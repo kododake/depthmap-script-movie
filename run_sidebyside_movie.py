@@ -1,5 +1,4 @@
 import torch
-import run_sidebyside_movie
 from src.video_mode import gen_video
 from src.common_constants import GenerationOptions as go
 
@@ -27,7 +26,7 @@ def check_gpu():
 
 check_gpu()
 
-# Corrected call to gen_video function by removing the device argument
-result = gen_video(input_video_path, output_path, generation_options)
+# Pass the device to gen_video function
+result = gen_video(input_video_path, output_path, generation_options, device=device)
 
 print(result)
