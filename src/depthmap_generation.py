@@ -399,6 +399,8 @@ class ModelHolder:
                 raw_prediction = estimatedepthanything(img, self.depth_model, net_width, net_height)
             elif self.depth_model_type in [12, 13, 14]:
                 raw_prediction = estimatedepthanything_v2(img, self.depth_model, net_width, net_height)
+            else:
+                raw_prediction = None  # Default case to avoid UnboundLocalError
         else:
             raw_prediction = estimateboost(img, self.depth_model, self.depth_model_type, self.pix2pix_model,
                                            self.boost_rmax)
