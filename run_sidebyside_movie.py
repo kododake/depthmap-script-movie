@@ -1,6 +1,8 @@
 from src.video_mode import gen_video
 from src.common_constants import GenerationOptions as go
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # 動画ファイルのパス
 input_video_path = input("Input video path: ")
 
@@ -18,6 +20,6 @@ generation_options = {
 }
 
 # 動画からステレオイメージを生成
-result = gen_video(input_video_path, output_path, generation_options)
+result = gen_video(input_video_path, output_path, generation_options, device=device)
 
 print(result)
