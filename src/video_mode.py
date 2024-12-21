@@ -144,7 +144,7 @@ def process_predicitons(predictions, smoothening='none'):
     return predictions
 
 
-def gen_video(video, outpath, inp, custom_depthmap=None, colorvids_bitrate=None, smoothening='none'):
+def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=None, smoothening='none'):
     # Ensure all necessary keys are in the inp dictionary
     required_keys = [go.GEN_SIMPLE_MESH.name.lower(), go.GEN_INPAINTED_MESH.name.lower()]
     for key in required_keys:
@@ -154,7 +154,7 @@ def gen_video(video, outpath, inp, custom_depthmap=None, colorvids_bitrate=None,
     if inp[go.GEN_SIMPLE_MESH.name.lower()] or inp[go.GEN_INPAINTED_MESH.name.lower()]:
         return 'Creating mesh-videos is not supported. Please split video into frames and use batch processing.'
 
-    fps, input_images = open_path_as_images(os.path.abspath(video.name))
+    fps, input_images = open_path_as_images(os.path.abspath(video_path))
     os.makedirs(backbone.get_outpath(), exist_ok=True)
 
     if custom_depthmap is None:
@@ -172,7 +172,7 @@ def gen_video(video, outpath, inp, custom_depthmap=None, colorvids_bitrate=None,
         input_depths = process_predicitons(input_depths, smoothening)
     else:
         print('Using custom depthmap video')
-        cdm_fps, input_depths = open_path_as_images(os.path.abspath(custom_depthmap.name), maybe_depthvideo=True)
+        cdm_fps, input_depths = open_path_as_images(os.path.abspath(custom_depthmap), maybe_depthvideo=True)
         assert len(input_depths) == len(input_images), 'Custom depthmap video length does not match input video length'
         if input_depths[0].size != input_images[0].size:
             print('Warning! Input video size and depthmap video size are not the same!')
@@ -184,8 +184,6 @@ def gen_video(video, outpath, inp, custom_depthmap=None, colorvids_bitrate=None,
     print('Saving generated frames as video outputs')
     for gen in gens:
         if gen == 'depth' and custom_depthmap is not None:
-            # Well, that would be extra stupid, even if user has picked this option for some reason
-            # (forgot to change the default?)
             continue
 
         imgs = [x[2] for x in img_results if x[1] == gen]
@@ -197,9 +195,8 @@ def gen_video(video, outpath, inp, custom_depthmap=None, colorvids_bitrate=None,
     stereo_images = []
     for image, depth_map in zip(input_images, input_depths):
         stereo_image = create_stereoimages(image, depth_map, inp[go.STEREO_DIVERGENCE], inp[go.STEREO_SEPARATION], inp[go.STEREO_MODES], inp[go.STEREO_BALANCE], inp[go.STEREO_OFFSET_EXPONENT], inp[go.STEREO_FILL_ALGO])
-        stereo_images.append(stereo_image[0])  # Assuming modes has at least one mode
+        stereo_images.append(stereo_image[0])
     
-    # Save stereo images as video
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
 
     print('All done. Video(s) saved!')
