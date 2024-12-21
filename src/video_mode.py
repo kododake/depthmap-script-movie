@@ -68,6 +68,22 @@ def open_path_as_images(path, maybe_depthvideo=False):
             raise Exception(f"Probably an unsupported file format: {suffix}") from e
 
 
+from src.stereoimage_generation import create_stereoimages
+
+def process_video_with_stereo(video_path, output_path, divergence=2.0, separation=0.5, modes=['left-right'], stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
+    # Extract frames from video
+    fps, frames = open_path_as_images(video_path)
+    
+    # Create stereo images for each frame
+    stereo_frames = []
+    for frame in frames:
+        depth_map = generate_depth_map(frame)  # Assuming you have a function to generate depth map for each frame
+        stereo_image = create_stereoimages(frame, depth_map, divergence, separation, modes, stereo_balance, stereo_offset_exponent, fill_technique)
+        stereo_frames.append(stereo_image[0])  # Assuming modes has at least one mode
+    
+    # Combine processed frames back into a video
+    frames_to_video(fps, stereo_frames, output_path, 'stereo_video')
+
 def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
     if frames[0].mode == 'I;16':  # depthmap video
         import imageio_ffmpeg
