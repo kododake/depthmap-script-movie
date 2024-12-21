@@ -27,7 +27,7 @@ def check_gpu():
 
 check_gpu()
 
-# Pass the device to gen_video function if needed
-result = gen_video(input_video_path, output_path, generation_options, device=device)
+# Corrected call to gen_video function by removing the device argument
+result = gen_video(input_video_path, output_path, generation_options)
 
 print(result)
