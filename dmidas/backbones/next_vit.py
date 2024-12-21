@@ -13,11 +13,11 @@ NORM_EPS = 1e-5
 
 # thygate: just dropped the file in place here together with the single function import merge_pre_bn from Next_ViT repo which is no longer required :
 
-#file = open( Path.joinpath(Path.cwd(), "/extensions/stable-diffusion-webui-depthmap-script/midas/externals/Next_ViT/classification/nextvit.py"), "r")
-#source_code = file.read().replace(" utils", " externals.Next_ViT.classification.utils")
-#exec(source_code)
+# file = open( Path.joinpath(Path.cwd(), "/extensions/stable-diffusion-webui-depthmap-script/midas/externals/Next_ViT/classification/nextvit.py"), "r")
+# source_code = file.read().replace(" utils", " externals.Next_ViT.classification.utils")
+# exec(source_code)
 
-#start of file : Next_ViT/classification/nextvit.py :
+# start of file : Next_ViT/classification/nextvit.py :
 
 # Copyright (c) ByteDance Inc. All rights reserved.
 
@@ -333,3 +333,4 @@ if not timm.models.registry.is_model('nextvit_small'):
     register_model(nextvit_small)
 
 if not timm.models.registry.is_model('nextvit_base'):
+    register
