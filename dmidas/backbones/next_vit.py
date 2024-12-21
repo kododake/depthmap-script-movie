@@ -315,7 +315,6 @@ class NextViT(nn.Module):
         x = self.proj_head(x)
         return x
 
-# Define the models
 def nextvit_small(pretrained=False, pretrained_cfg=None, **kwargs):
     model = NextViT(stem_chs=[64, 32, 64], depths=[3, 4, 10, 3], path_dropout=0.1, **kwargs)
     return model
@@ -328,9 +327,17 @@ def nextvit_large(pretrained=False, pretrained_cfg=None, **kwargs):
     model = NextViT(stem_chs=[64, 32, 64], depths=[3, 4, 30, 3], path_dropout=0.2, **kwargs)
     return model
 
+def _make_pretrained_next_vit_large_6m(hooks=None):
+    model = nextvit_large(pretrained=True)
+    # Custom initialization or modifications can be done here if needed.
+    return model
+
 # Conditional registration
 if not timm.models.registry.is_model('nextvit_small'):
     register_model(nextvit_small)
 
 if not timm.models.registry.is_model('nextvit_base'):
-    register
+    register_model(nextvit_base)
+
+if not timm.models.registry.is_model('nextvit_large'):
+    register_model(nextvit_large)
