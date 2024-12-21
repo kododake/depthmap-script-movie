@@ -186,6 +186,16 @@ def gen_video(video, outpath, inp, custom_depthmap=None, colorvids_bitrate=None,
         basename = f'{gen}_video'
         frames_to_video(fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}",
                         colorvids_bitrate)
+
+    print('Generating stereo images for each frame')
+    stereo_images = []
+    for image, depth_map in zip(input_images, input_depths):
+        stereo_image = create_stereoimages(image, depth_map, inp[go.STEREO_DIVERGENCE], inp[go.STEREO_SEPARATION], inp[go.STEREO_MODES], inp[go.STEREO_BALANCE], inp[go.STEREO_OFFSET_EXPONENT], inp[go.STEREO_FILL_ALGO])
+        stereo_images.append(stereo_image[0])  # Assuming modes has at least one mode
+    
+    # Save stereo images as video
+    frames_to_video(fps, stereo_images, outpath, 'stereo_video')
+
     print('All done. Video(s) saved!')
     return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 \
         else '<h3>Nothing generated - please check the settings and try again</h3>'
