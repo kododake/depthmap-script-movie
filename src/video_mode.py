@@ -145,6 +145,12 @@ def process_predicitons(predictions, smoothening='none'):
 
 
 def gen_video(video, outpath, inp, custom_depthmap=None, colorvids_bitrate=None, smoothening='none'):
+    # Ensure all necessary keys are in the inp dictionary
+    required_keys = [go.GEN_SIMPLE_MESH.name.lower(), go.GEN_INPAINTED_MESH.name.lower()]
+    for key in required_keys:
+        if key not in inp:
+            inp[key] = False
+
     if inp[go.GEN_SIMPLE_MESH.name.lower()] or inp[go.GEN_INPAINTED_MESH.name.lower()]:
         return 'Creating mesh-videos is not supported. Please split video into frames and use batch processing.'
 
