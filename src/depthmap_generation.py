@@ -400,7 +400,7 @@ class ModelHolder:
             elif self.depth_model_type in [12, 13, 14]:
                 raw_prediction = estimatedepthanything_v2(img, self.depth_model, net_width, net_height)
             else:
-                raw_prediction = None  # Default case to avoid UnboundLocalError
+                raise ValueError(f"Unsupported depth_model_type: {self.depth_model_type}")  # Raise error for unsupported types
         else:
             raw_prediction = estimateboost(img, self.depth_model, self.depth_model_type, self.pix2pix_model,
                                            self.boost_rmax)
