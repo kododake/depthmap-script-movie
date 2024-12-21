@@ -56,9 +56,12 @@ def open_path_as_images(path, maybe_depthvideo=False, device='cpu'):
     if suffix.lower() in ['.webm', '.mp4', '.avi']:
         from moviepy.video.io.VideoFileClip import VideoFileClip
         clip = VideoFileClip(path)
-        frames = [Image.fromarray(x) for x in list(clip.iter_frames())]
-        # Move frames to GPU if available
-        frames = [torch.tensor(np.array(frame)).to(device) for frame in frames]
+        frames = []
+        for frame in clip.iter_frames():
+            img = torch.tensor(np.array(frame))
+            frames.append(img.to(device))
+            if torch.cuda.memory_allocated(device) > 20 * 1024 * 1024 * 1024:  # 20GB limit
+                break
         return clip.fps, frames
     else:
         try:
@@ -112,21 +115,19 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
 
         imgs = [x[2] for x in img_results if x[1] == gen]
         basename = f'{gen}_video'
-        frames_to_video(fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}",
-                        colorvids_bitrate)
+        frames_to_video(fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}", colorvids_bitrate)
 
     print('Generating stereo images for each frame')
     stereo_images = []
     for image, depth_map in zip(input_images, input_depths):
         stereo_image = create_stereoimages(image, depth_map, inp[go.STEREO_DIVERGENCE], inp[go.STEREO_SEPARATION], inp[go.STEREO_MODES], inp[go.STEREO_BALANCE], inp[go.STEREO_OFFSET_EXPONENT], inp[go.STEREO_FILL_ALGO])
         stereo_images.append(stereo_image[0])
-
+    
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
 
     print('All done. Video(s) saved!')
-    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 \
-        else '<h3>Nothing generated - please check the settings and try again</h3>'
-
+    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
+    
 from src.stereoimage_generation import create_stereoimages
 
 
