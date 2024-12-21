@@ -234,9 +234,9 @@ class ModelHolder:
 
             model.load_state_dict(torch.load(model_path))
 
-        elif model_type in [12, 13, 14]:  # depth_anything_v2 small, base, large
-            letter = {12: 's', 13: 'b', 14: 'l'}[model_type]
-            word = {12: 'Small', 13: 'Base', 14: 'Large'}[model_type]
+        elif model_type in ["Depth Anything v2 Small", "Depth Anything v2 Base", "Depth Anything v2 Large"]:
+            letter = {'Depth Anything v2 Small': 's', 'Depth Anything v2 Base': 'b', 'Depth Anything v2 Large': 'l'}[model_type]
+            word = {'Depth Anything v2 Small': 'Small', 'Depth Anything v2 Base': 'Base', 'Depth Anything v2 Large': 'Large'}[model_type]
             model_path = f"{model_dir}/depth_anything_v2_vit{letter}.pth"
             ensure_file_downloaded(model_path,
                                    f"https://huggingface.co/depth-anything/Depth-Anything-V2-{word}/resolve/main/depth_anything_v2_vit{letter}.pth")
@@ -246,6 +246,7 @@ class ModelHolder:
                              'vitg': {'encoder': 'vitg', 'features': 384, 'out_channels': [1536, 1536, 1536, 1536]}}
             model = DepthAnythingV2(**model_configs[f'vit{letter}'])
             model.load_state_dict(torch.load(model_path, map_location='cpu'))
+
 
         # Ensure model is not None before proceeding
         if model is None:
