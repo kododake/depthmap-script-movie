@@ -374,14 +374,14 @@ class ModelHolder:
 
         self.depth_model_type = None
         self.device = None
-
+        
     def get_raw_prediction(self, input, net_width, net_height):
         """Get prediction from the model currently loaded by the ModelHolder object.
         If boost is enabled, net_width and net_height will be ignored."""
         global depthmap_device
         depthmap_device = self.device
         # input image
-        img = cv2.cvtColor(np.asarray(input), cv2.COLOR_BGR2RGB) / 255.0
+        img = cv2.cvtColor(np.asarray(input.cpu()), cv2.COLOR_BGR2RGB) / 255.0  # Move tensor to CPU before conversion
         # compute depthmap
         if self.pix2pix_model is None:
             if self.depth_model_type == 0:
@@ -404,7 +404,6 @@ class ModelHolder:
                                            self.boost_rmax)
         raw_prediction_invert = self.depth_model_type in [0, 7, 8, 9, 10]
         return raw_prediction, raw_prediction_invert
-
 
 def estimateleres(img, model, w, h):
     # leres transform input
