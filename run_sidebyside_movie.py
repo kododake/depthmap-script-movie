@@ -1,15 +1,13 @@
+import torch
 from src.video_mode import gen_video
 from src.common_constants import GenerationOptions as go
 
+# Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# 動画ファイルのパス
 input_video_path = input("Input video path: ")
-
-# 出力ディレクトリのパス
 output_path = "."
 
-# 生成オプション
 generation_options = {
     go.STEREO_DIVERGENCE.name.lower(): 2.0,
     go.STEREO_SEPARATION.name.lower(): 0.5,
@@ -19,7 +17,7 @@ generation_options = {
     go.STEREO_FILL_ALGO.name.lower(): 'polylines_sharp'
 }
 
-# 動画からステレオイメージを生成
+# Pass the device to gen_video function if needed
 result = gen_video(input_video_path, output_path, generation_options, device=device)
 
 print(result)
