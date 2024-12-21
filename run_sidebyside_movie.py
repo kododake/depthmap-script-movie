@@ -7,7 +7,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Set memory limit to 7.3GB
 if device.type == "cuda":
-    torch.cuda.set_per_process_memory_fraction(7.3 / torch.cuda.get_device_properties(0).total_memory)
+    torch.cuda.set_per_process_memory_fraction(7.3*10**9 / torch.cuda.get_device_properties(0).total_memory)
 
 input_video_path = input("Input video path: ")
 output_path = "."
