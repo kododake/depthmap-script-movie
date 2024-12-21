@@ -1,8 +1,6 @@
 import enum
 
-
 class GenerationOptions(enum.Enum):
-    MODEL_TYPE = "Depth Anything v2 Base"  # Example value
     """This Enum provides the options that are used in the usual generation
     (that is, consumed by the core_generation_funnel).
     Please use this to avoid typos. Also, this enum provides default values for these options."""
