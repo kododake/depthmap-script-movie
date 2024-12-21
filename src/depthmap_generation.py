@@ -50,12 +50,10 @@ class ModelHolder:
         self.normalization = None
         self.tiling_mode = False
 
-
     def update_settings(self, **kvargs):
         # Opens the pandora box
         for k, v in kvargs.items():
             setattr(self, k, v)
-
 
     def ensure_models(self, model_type, device: torch.device, boost: bool, tiling_mode: bool = False):
         # TODO: could make it more granular
@@ -74,230 +72,237 @@ class ModelHolder:
         self.reload()
 
     def load_models(self, model_type, device: torch.device, boost: bool, tiling_mode: bool = False):
-    """Ensure that the depth model is loaded"""
-    # model path and name
-    model_dir = "./models/midas"
-    if model_type == 0:
-        model_dir = "./models/leres"
-    if model_type == 11:
-        model_dir = "./models/depth_anything"
-    if model_type in [12, 13, 14]:
-        model_dir = "./models/depth_anything_v2"
+        """Ensure that the depth model is loaded"""
 
-    # create paths to model if not present
-    os.makedirs(model_dir, exist_ok=True)
-    os.makedirs('./models/pix2pix', exist_ok=True)
+        # TODO: we need to at least try to find models downloaded by other plugins (e.g. controlnet)
 
-    print("Loading model weights from ", end=" ")
+        # model path and name
+        # ZoeDepth and Marigold do not use this
+        model_dir = "./models/midas"
+        if model_type == 0:
+            model_dir = "./models/leres"
+        if model_type == 11:
+            model_dir = "./models/depth_anything"
+        if model_type in [12, 13, 14]:
+            model_dir = "./models/depth_anything_v2"
 
-    resize_mode = "minimal"
-    normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+        # create paths to model if not present
+        os.makedirs(model_dir, exist_ok=True)
+        os.makedirs('./models/pix2pix', exist_ok=True)
 
-    model = None
-    if model_type == 0:  # "res101"
-        model_path = f"{model_dir}/res101.pth"
-        print(model_path)
-        ensure_file_downloaded(
-            model_path,
-            ["https://cloudstor.aarnet.edu.au/plus/s/lTIJF4vrvHCAI31/download",
-             "https://huggingface.co/lllyasviel/Annotators/resolve/5bc80eec2b4fddbb/res101.pth",
-             ],
-            "1d696b2ef3e8336b057d0c15bc82d2fecef821bfebe5ef9d7671a5ec5dde520b")
-        if device != torch.device('cpu'):
-            checkpoint = torch.load(model_path)
-        else:
-            checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
-        model = RelDepthModel(backbone='resnext101')
-        model.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."), strict=True)
-        del checkpoint
+        print("Loading model weights from ", end=" ")
+
+        resize_mode = "minimal"
+        normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+
+        model = None
+        if model_type == 0:  # "res101"
+            model_path = f"{model_dir}/res101.pth"
+            print(model_path)
+            ensure_file_downloaded(
+                model_path,
+                ["https://cloudstor.aarnet.edu.au/plus/s/lTIJF4vrvHCAI31/download",
+                 "https://huggingface.co/lllyasviel/Annotators/resolve/5bc80eec2b4fddbb/res101.pth",
+                 ],
+                "1d696b2ef3e8336b057d0c15bc82d2fecef821bfebe5ef9d7671a5ec5dde520b")
+            if device != torch.device('cpu'):
+                checkpoint = torch.load(model_path)
+            else:
+                checkpoint = torch.load(model_path, map_location=torch.device('cpu'))
+            model = RelDepthModel(backbone='resnext101')
+            model.load_state_dict(strip_prefix_if_present(checkpoint['depth_model'], "module."), strict=True)
+            del checkpoint
+            backbone.torch_gc()
+
+        elif model_type == 1:  # "dpt_beit_large_512" midas 3.1
+            model_path = f"{model_dir}/dpt_beit_large_512.pt"
+            print(model_path)
+            ensure_file_downloaded(model_path,
+                                   "https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_512.pt")
+            model = DPTDepthModel(
+                path=model_path,
+                backbone="beitl16_512",
+                non_negative=True,
+            )
+            resize_mode = "minimal"
+            normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+
+        elif model_type == 2:  # "dpt_beit_large_384" midas 3.1
+            model_path = f"{model_dir}/dpt_beit_large_384.pt"
+            print(model_path)
+            ensure_file_downloaded(model_path,
+                                   "https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_384.pt")
+            model = DPTDepthModel(
+                path=model_path,
+                backbone="beitl16_384",
+                non_negative=True,
+            )
+            resize_mode = "minimal"
+            normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+
+        elif model_type == 3:  # "dpt_large_384" midas 3.0
+            model_path = f"{model_dir}/dpt_large-midas-2f21e586.pt"
+            print(model_path)
+            ensure_file_downloaded(model_path,
+                                   "https://github.com/intel-isl/DPT/releases/download/1_0/dpt_large-midas-2f21e586.pt")
+            model = DPTDepthModel(
+                path=model_path,
+                backbone="vitl16_384",
+                non_negative=True,
+            )
+            resize_mode = "minimal"
+            normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+
+        elif model_type == 4:  # "dpt_hybrid_384" midas 3.0
+            model_path = f"{model_dir}/dpt_hybrid-midas-501f0c75.pt"
+            print(model_path)
+            ensure_file_downloaded(model_path,
+                                   "https://github.com/intel-isl/DPT/releases/download/1_0/dpt_hybrid-midas-501f0c75.pt")
+            model = DPTDepthModel(
+                path=model_path,
+                backbone="vitb_rn50_384",
+                non_negative=True,
+            )
+            resize_mode = "minimal"
+            normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+
+        elif model_type == 5:  # "midas_v21"
+            model_path = f"{model_dir}/midas_v21-f6b98070.pt"
+            print(model_path)
+            ensure_file_downloaded(model_path,
+                                   "https://github.com/AlexeyAB/MiDaS/releases/download/midas_dpt/midas_v21-f6b98070.pt")
+            model = MidasNet(model_path, non_negative=True)
+            resize_mode = "upper_bound"
+            normalization = NormalizeImage(
+                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+            )
+
+        elif model_type == 6:  # "midas_v21_small"
+            model_path = f"{model_dir}/midas_v21_small-70d6b9c8.pt"
+            print(model_path)
+            ensure_file_downloaded(model_path,
+                                   "https://github.com/AlexeyAB/MiDaS/releases/download/midas_dpt/midas_v21_small-70d6b9c8.pt")
+            model = MidasNet_small(model_path, features=64, backbone="efficientnet_lite3", exportable=True,
+                                   non_negative=True, blocks={'expand': True})
+            resize_mode = "upper_bound"
+            normalization = NormalizeImage(
+                mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
+            )
+
+        # When loading, zoedepth models will report the default net size.
+        # It will be overridden by the generation settings.
+        elif model_type == 7:  # zoedepth_n
+            print("zoedepth_n\n")
+            conf = get_config("zoedepth", "infer")
+            model = build_model(conf)
+
+        elif model_type == 8:  # zoedepth_k
+            print("zoedepth_k\n")
+            conf = get_config("zoedepth", "infer", config_version="kitti")
+            model = build_model(conf)
+
+        elif model_type == 9:  # zoedepth_nk
+            print("zoedepth_nk\n")
+            conf = get_config("zoedepth_nk", "infer")
+            model = build_model(conf)
+
+        elif model_type == 10:  # Marigold v1
+            model_path = "Bingxin/Marigold"
+            print(model_path)
+            dtype = torch.float32 if self.no_half else torch.float16
+            model = MarigoldPipeline.from_pretrained(model_path, torch_dtype=dtype)
+            try:
+                import xformers
+                model.enable_xformers_memory_efficient_attention()
+            except:
+                pass  # run without xformers
+
+        elif model_type == 11:  # depth_anything
+            from depth_anything.dpt import DPT_DINOv2
+            # This will download the model... to some place
+            model = (
+                DPT_DINOv2(
+                    encoder="vitl",
+                    features=256,
+                    out_channels=[256, 512, 1024, 1024],
+                    localhub=False,
+                ).to(device).eval()
+            )
+            model_path = f"{model_dir}/depth_anything_vitl14.pth"
+            ensure_file_downloaded(model_path,
+                                   "https://huggingface.co/spaces/LiheYoung/Depth-Anything/resolve/main/checkpoints/depth_anything_vitl14.pth")
+
+            model.load_state_dict(torch.load(model_path))
+
+        elif model_type in [12, 13, 14]:  # depth_anything_v2 small, base, large
+            letter = {12: 's', 13: 'b', 14: 'l'}[model_type]
+            word = {12: 'Small', 13: 'Base', 14: 'Large'}[model_type]
+            model_path = f"{model_dir}/depth_anything_v2_vit{letter}.pth"
+            ensure_file_downloaded(model_path,
+                                   f"https://huggingface.co/depth-anything/Depth-Anything-V2-{word}/resolve/main/depth_anything_v2_vit{letter}.pth")
+            model_configs = {'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
+                             'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
+                             'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]},
+                             'vitg': {'encoder': 'vitg', 'features': 384, 'out_channels': [1536, 1536, 1536, 1536]}}
+            model = DepthAnythingV2(**model_configs[f'vit{letter}'])
+            model.load_state_dict(torch.load(model_path, map_location='cpu'))
+
+        # Ensure model is not None before proceeding
+        if model is None:
+            raise ValueError(f"Unsupported model_type: {model_type}")
+
+        if tiling_mode:
+            def flatten(el):
+                flattened = [flatten(children) for children in el.children()]
+                res = [el]
+                for c in flattened:
+                    res += c
+                return res
+            layers = flatten(model)  # Hijacking the model
+            for layer in [layer for layer in layers if type(layer) == torch.nn.Conv2d or type(layer) == torch.nn.Conv1d]:
+                layer.padding_mode = 'circular'
+
+        if model_type in range(0, 10):
+            model.eval()  # prepare for evaluation
+        # optimize
+        if device == torch.device("cuda"):
+            if model_type in [0, 1, 2, 3, 4, 5, 6]:
+                model = model.to(memory_format=torch.channels_last)
+            if not self.no_half:
+                if model_type in [1, 2, 3, 4, 5, 6, 8, 9, 11] and not boost:
+                    model = model.half()
+                if model_type in [12, 13, 14]:
+                    model.depth_head.half()
+                    model.pretrained.half()
+        model.to(device)  # to correct device
+
+        self.depth_model = model
+        self.depth_model_type = model_type
+        self.resize_mode = resize_mode
+        self.normalization = normalization
+        self.tiling_mode = tiling_mode
+
+        self.device = device
+
+        if boost:
+            ensure_file_downloaded(
+                './models/pix2pix/latest_net_G.pth',
+                ["https://huggingface.co/lllyasviel/Annotators/resolve/9a7d84251d487d11/latest_net_G.pth",
+                 "https://sfu.ca/~yagiz/CVPR21/latest_net_G.pth"],
+                '50ec735d74ed6499562d898f41b49343e521808b8dae589aa3c2f5c9ac9f7462')
+            opt = TestOptions().parse()
+            if device == torch.device('cpu'):
+                opt.gpu_ids = []
+            self.pix2pix_model = Pix2Pix4DepthModel(opt)
+            self.pix2pix_model.save_dir = './models/pix2pix'
+            self.pix2pix_model.load_networks('latest')
+            self.pix2pix_model.eval()
+
         backbone.torch_gc()
-
-    elif model_type == 1:  # "dpt_beit_large_512" midas 3.1
-        model_path = f"{model_dir}/dpt_beit_large_512.pt"
-        print(model_path)
-        ensure_file_downloaded(model_path,
-                               "https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_512.pt")
-        model = DPTDepthModel(
-            path=model_path,
-            backbone="beitl16_512",
-            non_negative=True,
-        )
-        resize_mode = "minimal"
-        normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-
-    elif model_type == 2:  # "dpt_beit_large_384" midas 3.1
-        model_path = f"{model_dir}/dpt_beit_large_384.pt"
-        print(model_path)
-        ensure_file_downloaded(model_path,
-                               "https://github.com/isl-org/MiDaS/releases/download/v3_1/dpt_beit_large_384.pt")
-        model = DPTDepthModel(
-            path=model_path,
-            backbone="beitl16_384",
-            non_negative=True,
-        )
-        resize_mode = "minimal"
-        normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-
-    elif model_type == 3:  # "dpt_large_384" midas 3.0
-        model_path = f"{model_dir}/dpt_large-midas-2f21e586.pt"
-        print(model_path)
-        ensure_file_downloaded(model_path,
-                               "https://github.com/intel-isl/DPT/releases/download/1_0/dpt_large-midas-2f21e586.pt")
-        model = DPTDepthModel(
-            path=model_path,
-            backbone="vitl16_384",
-            non_negative=True,
-        )
-        resize_mode = "minimal"
-        normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-
-    elif model_type == 4:  # "dpt_hybrid_384" midas 3.0
-        model_path = f"{model_dir}/dpt_hybrid-midas-501f0c75.pt"
-        print(model_path)
-        ensure_file_downloaded(model_path,
-                               "https://github.com/intel-isl/DPT/releases/download/1_0/dpt_hybrid-midas-501f0c75.pt")
-        model = DPTDepthModel(
-            path=model_path,
-            backbone="vitb_rn50_384",
-            non_negative=True,
-        )
-        resize_mode = "minimal"
-        normalization = NormalizeImage(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-
-    elif model_type == 5:  # "midas_v21"
-        model_path = f"{model_dir}/midas_v21-f6b98070.pt"
-        print(model_path)
-        ensure_file_downloaded(model_path,
-                               "https://github.com/AlexeyAB/MiDaS/releases/download/midas_dpt/midas_v21-f6b98070.pt")
-        model = MidasNet(model_path, non_negative=True)
-        resize_mode = "upper_bound"
-        normalization = NormalizeImage(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        )
-
-    elif model_type == 6:  # "midas_v21_small"
-        model_path = f"{model_dir}/midas_v21_small-70d6b9c8.pt"
-        print(model_path)
-        ensure_file_downloaded(model_path,
-                               "https://github.com/AlexeyAB/MiDaS/releases/download/midas_dpt/midas_v21_small-70d6b9c8.pt")
-        model = MidasNet_small(model_path, features=64, backbone="efficientnet_lite3", exportable=True,
-                               non_negative=True, blocks={'expand': True})
-        resize_mode = "upper_bound"
-        normalization = NormalizeImage(
-            mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]
-        )
-
-    elif model_type == 7:  # zoedepth_n
-        print("zoedepth_n\n")
-        conf = get_config("zoedepth", "infer")
-        model = build_model(conf)
-
-    elif model_type == 8:  # zoedepth_k
-        print("zoedepth_k\n")
-        conf = get_config("zoedepth", "infer", config_version="kitti")
-        model = build_model(conf)
-
-    elif model_type == 9:  # zoedepth_nk
-        print("zoedepth_nk\n")
-        conf = get_config("zoedepth_nk", "infer")
-        model = build_model(conf)
-
-    elif model_type == 10:  # Marigold v1
-        model_path = "Bingxin/Marigold"
-        print(model_path)
-        dtype = torch.float32 if self.no_half else torch.float16
-        model = MarigoldPipeline.from_pretrained(model_path, torch_dtype=dtype)
-        try:
-            import xformers
-            model.enable_xformers_memory_efficient_attention()
-        except:
-            pass  # run without xformers
-
-    elif model_type == 11:  # depth_anything
-        from depth_anything.dpt import DPT_DINOv2
-        # This will download the model... to some place
-        model = (
-            DPT_DINOv2(
-                encoder="vitl",
-                features=256,
-                out_channels=[256, 512, 1024, 1024],
-                localhub=False,
-            ).to(device).eval()
-        )
-        model_path = f"{model_dir}/depth_anything_vitl14.pth"
-        ensure_file_downloaded(model_path,
-                               "https://huggingface.co/spaces/LiheYoung/Depth-Anything/resolve/main/checkpoints/depth_anything_vitl14.pth")
-
-        model.load_state_dict(torch.load(model_path))
-
-    elif model_type in [12, 13, 14]:  # depth_anything_v2 small, base, large
-        letter = {12: 's', 13: 'b', 14: 'l'}[model_type]
-        word = {12: 'Small', 13: 'Base', 14: 'Large'}[model_type]
-        model_path = f"{model_dir}/depth_anything_v2_vit{letter}.pth"
-        ensure_file_downloaded(model_path,
-                               f"https://huggingface.co/depth-anything/Depth-Anything-V2-{word}/resolve/main/depth_anything_v2_vit{letter}.pth")
-        model_configs = {'vits': {'encoder': 'vits', 'features': 64, 'out_channels': [48, 96, 192, 384]},
-                         'vitb': {'encoder': 'vitb', 'features': 128, 'out_channels': [96, 192, 384, 768]},
-                         'vitl': {'encoder': 'vitl', 'features': 256, 'out_channels': [256, 512, 1024, 1024]},
-                         'vitg': {'encoder': 'vitg', 'features': 384, 'out_channels': [1536, 1536, 1536, 1536]}}
-        model = DepthAnythingV2(**model_configs[f'vit{letter}'])
-        model.load_state_dict(torch.load(model_path, map_location='cpu'))
-
-    # Ensure model is not None before proceeding
-    if model is None:
-        raise ValueError(f"Unsupported model_type: {model_type}")
-
-    if tiling_mode:
-        def flatten(el):
-            flattened = [flatten(children) for children in el.children()]
-            res = [el]
-            for c in flattened:
-                res += c
-            return res
-        layers = flatten(model)  # Hijacking the model
-        for layer in [layer for layer in layers if type(layer) == torch.nn.Conv2d or type(layer) == torch.nn.Conv1d]:
-            layer.padding_mode = 'circular'
-
-    if model_type in range(0, 10):
-        model.eval()  # prepare for evaluation
-    # optimize
-    if device == torch.device("cuda"):
-        if model_type in [0, 1, 2, 3, 4, 5, 6]:
-            model = model.to(memory_format=torch.channels_last)
-        if not self.no_half:
-            if model_type in [1, 2, 3, 4, 5, 6, 8, 9, 11] and not boost:
-                model = model.half()
-            if model_type in [12, 13, 14]:
-                model.depth_head.half()
-                model.pretrained.half()
-    model.to(device)  # to correct device
-
-    self.depth_model = model
-    self.depth_model_type = model_type
-    self.resize_mode = resize_mode
-    self.normalization = normalization
-    self.tiling_mode = tiling_mode
-
-    self.device = device
-
-    if boost:
-        ensure_file_downloaded(
-            './models/pix2pix/latest_net_G.pth',
-            ["https://huggingface.co/lllyasviel/Annotators/resolve/9a7d84251d487d11/latest_net_G.pth",
-             "https://sfu.ca/~yagiz/CVPR21/latest_net_G.pth"],
-            '50ec735d74ed6499562d898f41b49343e521808b8dae589aa3c2f5c9ac9f7462')
-        opt = TestOptions().parse()
-        if device == torch.device('cpu'):
-            opt.gpu_ids = []
-        self.pix2pix_model = Pix2Pix4DepthModel(opt)
-        self.pix2pix_model.save_dir = './models/pix2pix'
-        self.pix2pix_model.load_networks('latest')
-        self.pix2pix_model.eval()
-
-    backbone.torch_gc()
 
     @staticmethod
     def get_default_net_size(model_type):
+        
         # Have you ever wondered why so many things in so many code repositories are not optimal?
         # For example, this here is a set of int:tuple. Why wouldn't it be a set of enum:tuple?
         # Or even better, why won't every model be defined separately with all it's necessary values and constants in one place? And why one like of this comment is much longer than the other ones?!
@@ -316,6 +321,7 @@ class ModelHolder:
         # Now it is just a giant mockyto monster. Noone wants to fight it because it is scary,
         # and thus this threshold of pain is much higher. Don't repeat our mistakes: fight the giant mojito monsters and
         # don't let them spread!
+        
         sizes = {
             0: [448, 448],
             1: [512, 512],
