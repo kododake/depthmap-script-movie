@@ -315,6 +315,15 @@ class NextViT(nn.Module):
         x = self.proj_head(x)
         return x
 
+def forward_next_vit(pretrained, x):
+    """ Forward function for NextViT models. """
+    layers = []
+    for i, layer in enumerate(pretrained.features):
+        x = layer(x)
+        layers.append(x)
+    return layers
+
+# Define the models
 def nextvit_small(pretrained=False, pretrained_cfg=None, **kwargs):
     model = NextViT(stem_chs=[64, 32, 64], depths=[3, 4, 10, 3], path_dropout=0.1, **kwargs)
     return model
@@ -341,3 +350,6 @@ if not timm.models.registry.is_model('nextvit_base'):
 
 if not timm.models.registry.is_model('nextvit_large'):
     register_model(nextvit_large)
+
+if not timm.models.registry.is_model('nextvit_large'):
+    register_model(forward_next_vit)
