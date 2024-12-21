@@ -11,7 +11,9 @@ from src.common_constants import GenerationOptions as go
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-def open_path_as_images(path, maybe_depthvideo=False, device=device):
+from moviepy.video.io.VideoFileClip import VideoFileClip
+
+def open_path_as_images(path, maybe_depthvideo=False, device=device, batch_size=10):
     """Takes the filepath, returns (fps, frames). Every frame is a Pillow Image object"""
     suffix = pathlib.Path(path).suffix
     if suffix.lower() == '.gif':
@@ -53,13 +55,19 @@ def open_path_as_images(path, maybe_depthvideo=False, device=device):
             if 'gen' in locals():
                 gen.close()
     if suffix.lower() in ['.webm', '.mp4', '.avi']:
-        from moviepy.video.io.VideoFileClip import VideoFileClip
         clip = VideoFileClip(path)
-        frames = []
-        for frame in clip.iter_frames():
-            img = torch.tensor(np.array(frame))
-            frames.append(img.to(device))
-        return clip.fps, frames
+        fps = clip.fps
+        for start_frame in range(0, int(clip.fps * clip.duration), batch_size):
+            frames = []
+            for frame in clip.iter_frames():
+                img = torch.tensor(np.array(frame))
+                frames.append(img.to(device))
+                if len(frames) == batch_size:
+                    yield fps, frames
+                    frames = []
+            if frames:
+                yield fps, frames
+        return
     else:
         try:
             img = Image.open(path)
@@ -78,7 +86,6 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
     if inp[go.GEN_SIMPLE_MESH.name.lower()] or inp[go.GEN_INPAINTED_MESH.name.lower()]:
         return 'Creating mesh-videos is not supported. Please split video into frames and use batch processing.'
 
-    fps, input_images = open_path_as_images(os.path.abspath(video_path), device=device)
     os.makedirs(backbone.get_outpath(), exist_ok=True)
 
     if custom_depthmap is None:
@@ -89,16 +96,24 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
         first_pass_inp[go.DO_OUTPUT_DEPTH_PREDICTION] = True
         first_pass_inp[go.DO_OUTPUT_DEPTH.name] = False
 
-        gen_obj = core.core_generation_funnel(None, input_images, None, None, first_pass_inp)
-        input_depths = [x[2] for x in list(gen_obj)]
-        input_depths = process_predicitons(input_depths, smoothening)
+        for fps, input_images in open_path_as_images(os.path.abspath(video_path), device=device):
+            gen_obj = core.core_generation_funnel(None, input_images, None, None, first_pass_inp)
+            input_depths = [x[2] for x in list(gen_obj)]
+            input_depths = process_predicitons(input_depths, smoothening)
+            process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate)
     else:
         print('Using custom depthmap video')
-        cdm_fps, input_depths = open_path_as_images(os.path.abspath(custom_depthmap), maybe_depthvideo=True, device=device)
-        assert len(input_depths) == len(input_images), 'Custom depthmap video length does not match input video length'
-        if input_depths[0].size != input_images[0].size:
-            print('Warning! Input video size and depthmap video size are not the same!')
+        for fps, input_images in open_path_as_images(os.path.abspath(video_path), device=device):
+            cdm_fps, input_depths = open_path_as_images(os.path.abspath(custom_depthmap), maybe_depthvideo=True, device=device)
+            assert len(input_depths) == len(input_images), 'Custom depthmap video length does not match input video length'
+            if input_depths[0].size != input_images[0].size:
+                print('Warning! Input video size and depthmap video size are not the same!')
+            process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate)
 
+    print('All done. Video(s) saved!')
+    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
+
+def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate):
     print('Generating output frames')
     img_results = list(core.core_generation_funnel(None, input_images, input_depths, None, inp))
     gens = list(set(map(lambda x: x[1], img_results)))
@@ -119,9 +134,6 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
         stereo_images.append(stereo_image[0])
     
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
-
-    print('All done. Video(s) saved!')
-    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
 
 from src.stereoimage_generation import create_stereoimages
 
