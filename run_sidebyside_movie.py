@@ -1,4 +1,5 @@
 import torch
+import run_sidebyside_movie
 from src.video_mode import gen_video
 from src.common_constants import GenerationOptions as go
 
