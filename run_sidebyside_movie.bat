@@ -13,3 +13,4 @@ set CUDA_VISIBLE_DEVICES=0
 
 REM Run the conversion script
 python run_sidebyside_movie.py
+pause
