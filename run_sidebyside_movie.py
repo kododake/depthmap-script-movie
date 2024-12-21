@@ -18,7 +18,7 @@ generation_options = {
     go.STEREO_FILL_ALGO.name.lower(): 'polylines_sharp'
 }
 
-# Pass the device to gen_video function if needed
-result = gen_video(input_video_path, output_path, generation_options, device=device)
+# Remove the device argument from the gen_video call
+result = gen_video(input_video_path, output_path, generation_options)
 
 print(result)
