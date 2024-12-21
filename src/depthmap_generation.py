@@ -397,7 +397,7 @@ class ModelHolder:
                                                   self.marigold_ensembles, self.marigold_steps)
             elif self.depth_model_type == 11:
                 raw_prediction = estimatedepthanything(img, self.depth_model, net_width, net_height)
-            elif self.depth_model_type in [12, 13, 14]:
+            elif self.depth_model_type in [12, 13, 14] or self.depth_model_type in ["Depth Anything v2 Small", "Depth Anything v2 Base", "Depth Anything v2 Large"]:
                 raw_prediction = estimatedepthanything_v2(img, self.depth_model, net_width, net_height)
             else:
                 raise ValueError(f"Unsupported depth_model_type: {self.depth_model_type}")  # Raise error for unsupported types
