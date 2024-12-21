@@ -5,6 +5,9 @@ from src.common_constants import GenerationOptions as go
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
+# Set memory limit to 7.3GB
+torch.cuda.set_per_process_memory_fraction(7.3 / torch.cuda.get_device_properties(device).total_memory, device=device)
+
 input_video_path = input("Input video path: ")
 output_path = "."
 
