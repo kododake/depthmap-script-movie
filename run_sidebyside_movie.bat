@@ -1,4 +1,3 @@
-
 @echo off
 REM Get the directory of the currently executed script
 set SCRIPT_DIR=%~dp0
