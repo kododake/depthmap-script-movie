@@ -126,7 +126,10 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
         imgs = [x[2] for x in img_results if x[1] == gen]
         basename = f'{gen}_video'
         frames_to_video(fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}", colorvids_bitrate)
-
+    required_stereo_keys = [go.STEREO_DIVERGENCE, go.STEREO_SEPARATION, go.STEREO_MODES, go.STEREO_BALANCE, go.STEREO_OFFSET_EXPONENT, go.STEREO_FILL_ALGO]
+    for key in required_stereo_keys:
+        if key.name.lower() not in inp:
+            inp[key.name.lower()] = key.df  # Set default value if key is missing
     print('Generating stereo images for each frame')
     stereo_images = []
     for image, depth_map in zip(input_images, input_depths):
