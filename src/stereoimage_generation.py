@@ -41,6 +41,10 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
     if len(modes) == 0:
         return []
 
+    # Move the tensor to the CPU before converting to a NumPy array
+    if isinstance(original_image, torch.Tensor):
+        original_image = original_image.cpu().numpy()
+    
     original_image = np.asarray(original_image)
     balance = (stereo_balance + 1) / 2
     left_eye = original_image if balance < 0.001 else \
@@ -52,22 +56,21 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
 
     results = []
     for mode in modes:
-        if mode == 'left-right':  # Most popular format. Common use case: displaying in HMD.
+        if mode == 'left-right':
             results.append(np.hstack([left_eye, right_eye]))
-        elif mode == 'right-left':  # Cross-viewing
+        elif mode == 'right-left':
             results.append(np.hstack([right_eye, left_eye]))
         elif mode == 'top-bottom':
             results.append(np.vstack([left_eye, right_eye]))
         elif mode == 'bottom-top':
             results.append(np.vstack([right_eye, left_eye]))
-        elif mode == 'red-cyan-anaglyph':  # Anaglyth glasses
+        elif mode == 'red-cyan-anaglyph':
             results.append(overlap_red_cyan(left_eye, right_eye))
         elif mode == 'left-only':
             results.append(left_eye)
         elif mode == 'only-right':
             results.append(right_eye)
-        elif mode == 'cyan-red-reverseanaglyph':  # Anaglyth glasses worn upside down
-            # Better for people whose main eye is left
+        elif mode == 'cyan-red-reverseanaglyph':
             results.append(overlap_red_cyan(right_eye, left_eye))
         else:
             raise Exception('Unknown mode')
