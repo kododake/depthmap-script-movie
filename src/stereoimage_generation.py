@@ -35,6 +35,7 @@ import torch  # Add this import
       Must be one of the following: 'none', 'naive', 'naive_interpolating', 'polylines_soft', 'polylines_sharp'.
       """
 
+
 def create_stereoimages(original_image, depthmap, divergence, separation=0.0, modes=None,
                         stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     if modes is None:
@@ -49,6 +50,12 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
         original_image = torch.tensor(original_image).to('cuda')
     elif isinstance(original_image, torch.Tensor):
         original_image = original_image.to('cuda')
+    
+    # Convert depthmap to PyTorch tensor and move to GPU
+    if isinstance(depthmap, np.ndarray):
+        depthmap = torch.tensor(depthmap).to('cuda')
+    elif isinstance(depthmap, torch.Tensor):
+        depthmap = depthmap.to('cuda')
 
     balance = (stereo_balance + 1) / 2
     left_eye = original_image if balance < 0.001 else \
@@ -83,11 +90,14 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
 
 def apply_stereo_divergence(original_image, depth, divergence, separation, stereo_offset_exponent, fill_technique):
     assert original_image.shape[:2] == depth.shape, 'Depthmap and the image must have the same size'
-    depth_min = depth.min()
-    depth_max = depth.max()
+    depth_min = depth.min().item()
+    depth_max = depth.max().item()
     normalized_depth = (depth - depth_min) / (depth_max - depth_min)
     divergence_px = (divergence / 100.0) * original_image.shape[1]
     separation_px = (separation / 100.0) * original_image.shape[1]
+
+    normalized_depth = normalized_depth.cpu().numpy()
+    original_image = original_image.cpu().numpy()
 
     if fill_technique in ['none', 'naive', 'naive_interpolating']:
         return apply_stereo_divergence_naive(
