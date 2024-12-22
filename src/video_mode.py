@@ -188,6 +188,11 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
         raise ValueError("No frames available to process")
 
     try:
+        # Debugging: Print the type and length of frames
+        print(f"Type of frames: {type(frames)}, Length of frames: {len(frames)}")
+        if frames:
+            print(f"Type of first frame: {type(frames[0])}, Attributes of first frame: {dir(frames[0])}")
+        
         # Ensure frames are in the correct format
         if not hasattr(frames[0], 'mode'):
             raise TypeError("Frames are not in the expected format")
