@@ -60,8 +60,8 @@ def open_path_as_images(path, maybe_depthvideo=False, device=device, batch_size=
         for start_frame in range(0, int(clip.fps * clip.duration), batch_size):
             frames = []
             for frame in clip.iter_frames():
-                img = torch.tensor(np.array(frame))
-                frames.append(img.to(device))
+                img = torch.tensor(np.array(frame)).to(device)
+                frames.append(img)
                 if len(frames) == batch_size:
                     yield fps, frames
                     frames = []
