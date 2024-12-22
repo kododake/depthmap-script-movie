@@ -1,3 +1,3 @@
 # config.py
-MEMORY_LIMIT_GB = 7.3
-BATCH_SIZE = 50
+MEMORY_LIMIT_GB = 7.4
+BATCH_SIZE = 80  #Bigger is preferable
