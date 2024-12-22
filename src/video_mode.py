@@ -188,14 +188,9 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
         raise ValueError("No frames available to process")
 
     try:
-        # Debugging: Print the type and length of frames
-        print(f"Type of frames: {type(frames)}, Length of frames: {len(frames)}")
-        if frames:
-            print(f"Type of first frame: {type(frames[0])}, Attributes of first frame: {dir(frames[0])}")
-        
         # Ensure frames are in the correct format
-        if not hasattr(frames[0], 'mode'):
-            raise TypeError("Frames are not in the expected format")
+        if isinstance(frames[0], torch.Tensor):
+            frames = [Image.fromarray(frame.cpu().numpy()) for frame in frames]
         
         if frames[0].mode == 'I;16':
             import imageio_ffmpeg
@@ -205,11 +200,11 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
             try:
                 writer.send(None)
                 for frame in frames:
-                    writer.send(np.array(frame.cpu()) if isinstance(frame, torch.Tensor) else np.array(frame))
+                    writer.send(np.array(frame))
             finally:
                 writer.close()
         else:
-            arrs = [np.asarray(frame.cpu()) if isinstance(frame, torch.Tensor) else np.asarray(frame) for frame in frames]
+            arrs = [np.asarray(frame) for frame in frames]
             from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
             clip = ImageSequenceClip(arrs, fps=fps)
             done = False
