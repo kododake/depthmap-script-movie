@@ -118,9 +118,7 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
             process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate)
 
     print('All done. Video(s) saved!')
-    gens = [video for video in os.listdir(outpath) if video.endswith(('.avi', '.mp4', '.webm'))]
-    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
-    
+    return '<h3>Videos generated</h3>' if len(os.listdir(outpath)) > 1 else '<h3>Video generated</h3>' if len(os.listdir(outpath)) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
 
 def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
     print('Generating output frames')
