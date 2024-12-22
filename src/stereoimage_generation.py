@@ -11,7 +11,8 @@ from PIL import Image
 import torch  # Add this import
 
 
-    """Creates stereoscopic images._~~def create_stereoimages
+"""Creates stereoscopic images._
+    def create_stereoimages
     An effort is made to make them look nice, but beware that the resulting image will have some distortion.
     The correctness was not rigorously tested.
 
@@ -32,7 +33,7 @@ import torch  # Add this import
     :param str fill_technique: applying divergence inevitably creates some gaps in the image.
       This parameter specifies the technique that will be used to fill in the blanks in the two resulting images.
       Must be one of the following: 'none', 'naive', 'naive_interpolating', 'polylines_soft', 'polylines_sharp'.
-    """
+      """
 
 def create_stereoimages(original_image, depthmap, divergence, separation=0.0, modes=None,
                         stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
