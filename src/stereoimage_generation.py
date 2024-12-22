@@ -36,6 +36,7 @@ import torch  # Add this import
       """
 
 
+
 def create_stereoimages(original_image, depthmap, divergence, separation=0.0, modes=None,
                         stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     if modes is None:
@@ -45,13 +46,12 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
     if len(modes) == 0:
         return []
 
-    # Move the tensor to the GPU if not already
+    # Move the original image and depthmap to the GPU if not already
     if isinstance(original_image, np.ndarray):
         original_image = torch.tensor(original_image).to('cuda')
     elif isinstance(original_image, torch.Tensor):
         original_image = original_image.to('cuda')
     
-    # Convert depthmap to PyTorch tensor and move to GPU
     if isinstance(depthmap, np.ndarray):
         depthmap = torch.tensor(depthmap).to('cuda')
     elif isinstance(depthmap, torch.Tensor):
@@ -86,7 +86,6 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
         else:
             raise Exception('Unknown mode')
     return [Image.fromarray(r) for r in results]
-
 
 def apply_stereo_divergence(original_image, depth, divergence, separation, stereo_offset_exponent, fill_technique):
     assert original_image.shape[:2] == depth.shape, 'Depthmap and the image must have the same size'
