@@ -122,6 +122,8 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
     return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
     
 
+
+
 def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
     print('Generating output frames')
     img_results = list(core.core_generation_funnel(None, input_images, input_depths, None, inp))
@@ -166,11 +168,11 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
             inp[go.STEREO_MODES.name.lower()], inp[go.STEREO_BALANCE.name.lower()],
             inp[go.STEREO_OFFSET_EXPONENT.name.lower()], inp[go.STEREO_FILL_ALGO.name.lower()]
         )
-        stereo_image_np = np.array(stereo_image[0]) # NumPyの配列に変換
-        stereo_image.append(Image.fromarray(stereo_image_np))
-        #stereo_images.append(Image.fromarray(stereo_image[0].numpy()))  # Convert back to PIL Image
+        stereo_image_np = np.array(stereo_image[0])  # Convert to NumPy array
+        stereo_images.append(Image.fromarray(stereo_image_np))  # Convert back to PIL Image
 
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
+
     
     
 def process_video_with_stereo(video_path, output_path, divergence=2.0, separation=0.5, modes=['left-right'], stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
