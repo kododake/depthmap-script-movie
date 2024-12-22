@@ -120,7 +120,7 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
     print('All done. Video(s) saved!')
     gens = [video for video in os.listdir(outpath) if video.endswith(('.avi', '.mp4', '.webm'))]
     return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
-
+    
 
 def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
     print('Generating output frames')
@@ -166,10 +166,10 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
             inp[go.STEREO_MODES.name.lower()], inp[go.STEREO_BALANCE.name.lower()],
             inp[go.STEREO_OFFSET_EXPONENT.name.lower()], inp[go.STEREO_FILL_ALGO.name.lower()]
         )
-        stereo_images.append(stereo_image[0].cpu())  # Move back to CPU for saving
+        stereo_images.append(Image.fromarray(stereo_image[0].cpu().numpy()))  # Convert back to PIL Image
 
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
-
+    
 def process_video_with_stereo(video_path, output_path, divergence=2.0, separation=0.5, modes=['left-right'], stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     fps, frames = open_path_as_images(video_path, device=device)
     stereo_frames = []
