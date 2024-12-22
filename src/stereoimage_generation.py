@@ -37,6 +37,7 @@ import torch  # Add this import
 
 
 
+
 def create_stereoimages(original_image, depthmap, divergence, separation=0.0, modes=None,
                         stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     if modes is None:
@@ -59,11 +60,11 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
 
     balance = (stereo_balance + 1) / 2
     left_eye = original_image if balance < 0.001 else \
-        apply_stereo_divergence(original_image, depthmap, +1 * divergence * balance, -1 * separation,
-                                stereo_offset_exponent, fill_technique)
+        torch.tensor(apply_stereo_divergence(original_image, depthmap, +1 * divergence * balance, -1 * separation,
+                                             stereo_offset_exponent, fill_technique)).to('cuda')
     right_eye = original_image if balance > 0.999 else \
-        apply_stereo_divergence(original_image, depthmap, -1 * divergence * (1 - balance), separation,
-                                stereo_offset_exponent, fill_technique)
+        torch.tensor(apply_stereo_divergence(original_image, depthmap, -1 * divergence * (1 - balance), separation,
+                                             stereo_offset_exponent, fill_technique)).to('cuda')
 
     results = []
     for mode in modes:
