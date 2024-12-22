@@ -170,8 +170,8 @@ def core_generation_funnel(outpath, inputimages, inputdepthmaps, inputnames, inp
                 else:
                     # Should be in interval [0; 1], values outside of this range will be clipped.
                     out = np.asarray(dp, dtype="float")
-                    assert inputimages[count].height == out.shape[0], "Custom depthmap height mismatch"
-                    assert inputimages[count].width == out.shape[1], "Custom depthmap width mismatch"
+                    assert inputimages[count].shape[0] == out.shape[0], "Custom depthmap height mismatch"
+                    assert inputimages[count].shape[1] == out.shape[1], "Custom depthmap width mismatch"
             else:
                 # override net size (size may be different for different images)
                 if inp[go.NET_SIZE_MATCH]:
