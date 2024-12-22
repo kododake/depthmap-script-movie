@@ -2,9 +2,7 @@ import torch
 import asyncio
 from src.video_mode import gen_video
 from src.common_constants import GenerationOptions as go
-
-# Global variable for memory limit
-MEMORY_LIMIT_GB = 7.3
+from config import MEMORY_LIMIT_GB  # Import from config.py
 
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
