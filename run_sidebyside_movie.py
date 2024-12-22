@@ -9,7 +9,7 @@ MEMORY_LIMIT_GB = 7.3
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Set memory limit to 7.3GB
+# Set memory limit
 if device.type == "cuda":
     torch.cuda.set_per_process_memory_fraction(MEMORY_LIMIT_GB * 10**9 / torch.cuda.get_device_properties(0).total_memory)
 
