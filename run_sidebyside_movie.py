@@ -1,4 +1,5 @@
 import torch
+import asyncio
 from src.video_mode import gen_video
 from src.common_constants import GenerationOptions as go
 
@@ -30,7 +31,12 @@ def check_gpu():
 
 check_gpu()
 
-# Pass the device to gen_video function
-result = gen_video(input_video_path, output_path, generation_options, device=device)
+async def main():
+    loop = asyncio.get_running_loop()
 
-print(result)
+    # Run gen_video in a separate thread to avoid blocking
+    result = await loop.run_in_executor(None, gen_video, input_video_path, output_path, generation_options, device)
+
+    print(result)
+
+asyncio.run(main())
