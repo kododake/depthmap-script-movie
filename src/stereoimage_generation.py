@@ -10,9 +10,8 @@ import numpy as np
 from PIL import Image
 import torch  # Add this import
 
-def create_stereoimages(original_image, depthmap, divergence, separation=0.0, modes=None,
-                        stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
-    """Creates stereoscopic images.
+
+    """Creates stereoscopic images._~~def create_stereoimages
     An effort is made to make them look nice, but beware that the resulting image will have some distortion.
     The correctness was not rigorously tested.
 
@@ -34,6 +33,7 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
       This parameter specifies the technique that will be used to fill in the blanks in the two resulting images.
       Must be one of the following: 'none', 'naive', 'naive_interpolating', 'polylines_soft', 'polylines_sharp'.
     """
+
 def create_stereoimages(original_image, depthmap, divergence, separation=0.0, modes=None,
                         stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     if modes is None:
@@ -43,11 +43,12 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
     if len(modes) == 0:
         return []
 
-    # Move the tensor to the CPU before converting to a NumPy array
-    if isinstance(original_image, torch.Tensor):
-        original_image = original_image.cpu().numpy()
-    
-    original_image = np.asarray(original_image)
+    # Move the tensor to the GPU if not already
+    if isinstance(original_image, np.ndarray):
+        original_image = torch.tensor(original_image).to('cuda')
+    elif isinstance(original_image, torch.Tensor):
+        original_image = original_image.to('cuda')
+
     balance = (stereo_balance + 1) / 2
     left_eye = original_image if balance < 0.001 else \
         apply_stereo_divergence(original_image, depthmap, +1 * divergence * balance, -1 * separation,
@@ -59,21 +60,21 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
     results = []
     for mode in modes:
         if mode == 'left-right':
-            results.append(np.hstack([left_eye, right_eye]))
+            results.append(torch.hstack([left_eye, right_eye]).cpu().numpy())
         elif mode == 'right-left':
-            results.append(np.hstack([right_eye, left_eye]))
+            results.append(torch.hstack([right_eye, left_eye]).cpu().numpy())
         elif mode == 'top-bottom':
-            results.append(np.vstack([left_eye, right_eye]))
+            results.append(torch.vstack([left_eye, right_eye]).cpu().numpy())
         elif mode == 'bottom-top':
-            results.append(np.vstack([right_eye, left_eye]))
+            results.append(torch.vstack([right_eye, left_eye]).cpu().numpy())
         elif mode == 'red-cyan-anaglyph':
-            results.append(overlap_red_cyan(left_eye, right_eye))
+            results.append(overlap_red_cyan(left_eye.cpu().numpy(), right_eye.cpu().numpy()))
         elif mode == 'left-only':
-            results.append(left_eye)
+            results.append(left_eye.cpu().numpy())
         elif mode == 'only-right':
-            results.append(right_eye)
+            results.append(right_eye.cpu().numpy())
         elif mode == 'cyan-red-reverseanaglyph':
-            results.append(overlap_red_cyan(right_eye, left_eye))
+            results.append(overlap_red_cyan(right_eye.cpu().numpy(), left_eye.cpu().numpy()))
         else:
             raise Exception('Unknown mode')
     return [Image.fromarray(r) for r in results]
