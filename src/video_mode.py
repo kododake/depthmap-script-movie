@@ -188,6 +188,10 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
         raise ValueError("No frames available to process")
 
     try:
+        # Ensure frames are in the correct format
+        if not hasattr(frames[0], 'mode'):
+            raise TypeError("Frames are not in the expected format")
+        
         if frames[0].mode == 'I;16':
             import imageio_ffmpeg
             writer = imageio_ffmpeg.write_frames(
