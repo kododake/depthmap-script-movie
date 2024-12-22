@@ -122,7 +122,6 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
     return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
 
 
-import concurrent.futures
 
 def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
     print('Generating output frames')
@@ -137,7 +136,7 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
                 continue
 
             # Convert Image objects to tensors and move to GPU
-            imgs = [torch.tensor(np.array(x[2])).to(device) if isinstance(x[2], Image.Image) else x[2].to(device) for x in img_results if x[1] == gen]
+            imgs = [torch.tensor(np.array(x[2])).to(device) if isinstance(x[2], Image.Image) else torch.tensor(x[2]).to(device) for x in img_results if x[1] == gen]
             basename = f'{gen}_video'
             futures.append(executor.submit(frames_to_video, fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}", colorvids_bitrate))
 
@@ -159,8 +158,8 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
     stereo_images = []
     for image, depth_map in zip(input_images, input_depths):
         stereo_image = create_stereoimages(
-            torch.tensor(np.array(image)).to(device) if isinstance(image, Image.Image) else image.to(device),
-            torch.tensor(np.array(depth_map)).to(device) if isinstance(depth_map, Image.Image) else depth_map.to(device),
+            torch.tensor(np.array(image)).to(device) if isinstance(image, Image.Image) else torch.tensor(image).to(device),
+            torch.tensor(np.array(depth_map)).to(device) if isinstance(depth_map, Image.Image) else torch.tensor(depth_map).to(device),
             inp[go.STEREO_DIVERGENCE.name.lower()], inp[go.STEREO_SEPARATION.name.lower()],
             inp[go.STEREO_MODES.name.lower()], inp[go.STEREO_BALANCE.name.lower()],
             inp[go.STEREO_OFFSET_EXPONENT.name.lower()], inp[go.STEREO_FILL_ALGO.name.lower()]
