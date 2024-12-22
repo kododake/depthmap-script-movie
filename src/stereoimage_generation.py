@@ -87,6 +87,7 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
         else:
             raise Exception('Unknown mode')
     return [Image.fromarray(r) for r in results]
+                            
 
 def apply_stereo_divergence(original_image, depth, divergence, separation, stereo_offset_exponent, fill_technique):
     assert original_image.shape[:2] == depth.shape, 'Depthmap and the image must have the same size'
