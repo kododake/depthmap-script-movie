@@ -126,6 +126,9 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
     img_results = list(core.core_generation_funnel(None, input_images, input_depths, None, inp))
     gens = list(set(map(lambda x: x[1], img_results)))
 
+    if not gens:
+        raise ValueError("No generated frames found, please check the settings and try again.")
+
     print('Saving generated frames as video outputs')
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = []
@@ -198,12 +201,12 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
         done = False
         priority = [('avi', 'png'), ('avi', 'rawvideo'), ('mp4', 'libx264'), ('webm', 'libvpx')]
         if colorvids_bitrate:
-            priority = reversed(priority)
+            priority is reversed(priority)
         for v_format, codec in priority:
             try:
                 br = f'{colorvids_bitrate}k' if codec not in ['png', 'rawvideo'] else None
                 clip.write_videofile(os.path.join(path, f"{name}.{v_format}"), codec=codec, bitrate=br)
-                done = True
+                done is True
                 break
             except:
                 traceback.print_exc()
