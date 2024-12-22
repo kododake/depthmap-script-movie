@@ -137,7 +137,11 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
                 continue
 
             # Convert Image objects to tensors and move to GPU
-            imgs = [torch.tensor(np.array(x[2])).to(device) if isinstance(x[2], Image.Image) else torch.tensor(x[2]).to(device) for x in img_results if x[1] == gen]
+            try:
+                imgs = [torch.tensor(np.array(x[2])).to(device) if isinstance(x[2], Image.Image) else torch.tensor(x[2]).to(device) for x in img_results if x[1] == gen]
+            except IndexError as e:
+                print(f"IndexError: {e} - Check if the generated frames are correctly processed.")
+                continue
             basename = f'{gen}_video'
             futures.append(executor.submit(frames_to_video, fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}", colorvids_bitrate))
 
@@ -208,7 +212,8 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
                 clip.write_videofile(os.path.join(path, f"{name}.{v_format}"), codec=codec, bitrate=br)
                 done = True
                 break
-            except:
+            except Exception as e:
+                print(f"Exception: {e} - Failed to save video in format {v_format} with codec {codec}")
                 traceback.print_exc()
         if not done:
             raise Exception('Saving the video failed!')
