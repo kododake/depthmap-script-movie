@@ -129,7 +129,8 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
         if gen == 'depth' and custom_depthmap is not None:
             continue
 
-        imgs = [x[2].to(device) for x in img_results if x[1] == gen]  # Move to GPU
+        # Convert Image objects to tensors and move to GPU
+        imgs = [torch.tensor(np.array(x[2])).to(device) if isinstance(x[2], Image.Image) else x[2].to(device) for x in img_results if x[1] == gen]
         basename = f'{gen}_video'
         frames_to_video(fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}", colorvids_bitrate)
 
@@ -145,11 +146,13 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
     stereo_images = []
     for image, depth_map in zip(input_images, input_depths):
         stereo_image = create_stereoimages(
-            image.to(device), depth_map.to(device), inp[go.STEREO_DIVERGENCE.name.lower()], inp[go.STEREO_SEPARATION.name.lower()],
+            torch.tensor(np.array(image)).to(device) if isinstance(image, Image.Image) else image.to(device),
+            torch.tensor(np.array(depth_map)).to(device) if isinstance(depth_map, Image.Image) else depth_map.to(device),
+            inp[go.STEREO_DIVERGENCE.name.lower()], inp[go.STEREO_SEPARATION.name.lower()],
             inp[go.STEREO_MODES.name.lower()], inp[go.STEREO_BALANCE.name.lower()],
             inp[go.STEREO_OFFSET_EXPONENT.name.lower()], inp[go.STEREO_FILL_ALGO.name.lower()]
         )
-        stereo_images.append(stereo_image[0].to('cpu'))  # Move back to CPU for saving
+        stereo_images.append(stereo_image[0].cpu())  # Move back to CPU for saving
 
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
 
