@@ -8,6 +8,9 @@ from src import core
 from src import backbone
 from src.common_constants import GenerationOptions as go
 from config import MEMORY_LIMIT_GB  # Import from config.py
+import concurrent.futures
+from src.stereoimage_generation import create_stereoimages
+
 
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -119,20 +122,30 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
     return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
 
 
+import concurrent.futures
+
 def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
     print('Generating output frames')
     img_results = list(core.core_generation_funnel(None, input_images, input_depths, None, inp))
     gens = list(set(map(lambda x: x[1], img_results)))
 
     print('Saving generated frames as video outputs')
-    for gen in gens:
-        if gen == 'depth' and custom_depthmap is not None:
-            continue
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        futures = []
+        for gen in gens:
+            if gen == 'depth' and custom_depthmap is not None:
+                continue
 
-        # Convert Image objects to tensors and move to GPU
-        imgs = [torch.tensor(np.array(x[2])).to(device) if isinstance(x[2], Image.Image) else x[2].to(device) for x in img_results if x[1] == gen]
-        basename = f'{gen}_video'
-        frames_to_video(fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}", colorvids_bitrate)
+            # Convert Image objects to tensors and move to GPU
+            imgs = [torch.tensor(np.array(x[2])).to(device) if isinstance(x[2], Image.Image) else x[2].to(device) for x in img_results if x[1] == gen]
+            basename = f'{gen}_video'
+            futures.append(executor.submit(frames_to_video, fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}", colorvids_bitrate))
+
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                print(f"Error saving video: {e}")
 
     # 必要なキーを設定
     required_keys = [
@@ -155,8 +168,8 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
         stereo_images.append(stereo_image[0].cpu())  # Move back to CPU for saving
 
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
+    
 
-from src.stereoimage_generation import create_stereoimages
 
 def process_video_with_stereo(video_path, output_path, divergence=2.0, separation=0.5, modes=['left-right'], stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     fps, frames = open_path_as_images(video_path, device=device)
