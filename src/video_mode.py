@@ -129,7 +129,7 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
         if gen == 'depth' and custom_depthmap is not None:
             continue
 
-        imgs = [x[2] for x in img_results if x[1] == gen]
+        imgs = [x[2].to(device) for x in img_results if x[1] == gen]  # Move to GPU
         basename = f'{gen}_video'
         frames_to_video(fps, imgs, outpath, f"depthmap-{backbone.get_next_sequence_number(outpath, basename)}-{basename}", colorvids_bitrate)
 
@@ -145,12 +145,12 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
     stereo_images = []
     for image, depth_map in zip(input_images, input_depths):
         stereo_image = create_stereoimages(
-            image, depth_map, inp[go.STEREO_DIVERGENCE.name.lower()], inp[go.STEREO_SEPARATION.name.lower()],
+            image.to(device), depth_map.to(device), inp[go.STEREO_DIVERGENCE.name.lower()], inp[go.STEREO_SEPARATION.name.lower()],
             inp[go.STEREO_MODES.name.lower()], inp[go.STEREO_BALANCE.name.lower()],
             inp[go.STEREO_OFFSET_EXPONENT.name.lower()], inp[go.STEREO_FILL_ALGO.name.lower()]
         )
-        stereo_images.append(stereo_image[0])
-    
+        stereo_images.append(stereo_image[0].to('cpu'))  # Move back to CPU for saving
+
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
 
 from src.stereoimage_generation import create_stereoimages
