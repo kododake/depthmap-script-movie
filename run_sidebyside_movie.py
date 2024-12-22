@@ -12,6 +12,7 @@ if device.type == "cuda":
 
 input_video_path = input("Input video path: ")
 output_path = "outputs"  # Change output path to 'outputs' directory
+custom_depthmap = input("Custom depthmap video path: ")
 
 generation_options = {
     go.STEREO_DIVERGENCE.name.lower(): 2.0,
@@ -35,7 +36,7 @@ async def main():
     loop = asyncio.get_running_loop()
 
     # Run gen_video in a separate thread to avoid blocking
-    result = await loop.run_in_executor(None, gen_video, input_video_path, output_path, generation_options, device)
+    result = await loop.run_in_executor(None, gen_video, input_video_path, output_path, generation_options, custom_depthmap, device)
 
     print(result)
 
