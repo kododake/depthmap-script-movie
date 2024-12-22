@@ -8,7 +8,7 @@ except Exception as e:
         return Inner
 import numpy as np
 from PIL import Image
-
+import torch  # Add this import
 
 def create_stereoimages(original_image, depthmap, divergence, separation=0.0, modes=None,
                         stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
@@ -34,6 +34,8 @@ def create_stereoimages(original_image, depthmap, divergence, separation=0.0, mo
       This parameter specifies the technique that will be used to fill in the blanks in the two resulting images.
       Must be one of the following: 'none', 'naive', 'naive_interpolating', 'polylines_soft', 'polylines_sharp'.
     """
+def create_stereoimages(original_image, depthmap, divergence, separation=0.0, modes=None,
+                        stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     if modes is None:
         modes = ['left-right']
     if not isinstance(modes, list):
