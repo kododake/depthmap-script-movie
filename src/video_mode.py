@@ -106,7 +106,7 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
         for fps, input_images in open_path_as_images(os.path.abspath(video_path), device=device):
             gen_obj = core.core_generation_funnel(None, input_images, None, None, first_pass_inp)
             input_depths = [x[2] for x in list(gen_obj)]
-            input_depths = process_predicitons(input_depths, smoothening)
+            input_depths = process_predictions(input_depths, smoothening)
             process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap)
     else:
         print('Using custom depthmap video')
@@ -120,9 +120,6 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
     print('All done. Video(s) saved!')
     gens = [video for video in os.listdir(outpath) if video.endswith(('.avi', '.mp4', '.webm'))]
     return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
-    
-
-
 
 def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
     print('Generating output frames')
@@ -173,8 +170,6 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
 
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
 
-    
-    
 def process_video_with_stereo(video_path, output_path, divergence=2.0, separation=0.5, modes=['left-right'], stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     fps, frames = open_path_as_images(video_path, device=device)
     stereo_frames = []
@@ -183,9 +178,6 @@ def process_video_with_stereo(video_path, output_path, divergence=2.0, separatio
         stereo_image = create_stereoimages(frame, depth_map, divergence, separation, modes, stereo_balance, stereo_offset_exponent, fill_technique)
         stereo_frames.append(stereo_image[0])
     frames_to_video(fps, stereo_frames, output_path, 'stereo_video')
-
-
-
 
 def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
     if not frames:
@@ -221,7 +213,7 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
         if not done:
             raise Exception('Saving the video failed!')
 
-def process_predicitons(predictions, smoothening='none'):
+def process_predictions(predictions, smoothening='none'):
     def global_scaling(objs, a=None, b=None):
         normalized = []
         min_value = a if a is not None else min([obj.min() for obj in objs])
