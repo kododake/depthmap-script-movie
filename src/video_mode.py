@@ -187,36 +187,40 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
     if not frames:
         raise ValueError("No frames available to process")
 
-    if frames[0].mode == 'I;16':
-        import imageio_ffmpeg
-        writer = imageio_ffmpeg.write_frames(
-            os.path.join(path, f"{name}.avi"), frames[0].size, 'gray16le', 'gray16le', fps, codec='ffv1',
-            macro_block_size=1)
-        try:
-            writer.send(None)
-            for frame in frames:
-                writer.send(np.array(frame.cpu()) if isinstance(frame, torch.Tensor) else np.array(frame))
-        finally:
-            writer.close()
-    else:
-        arrs = [np.asarray(frame.cpu()) if isinstance(frame, torch.Tensor) else np.asarray(frame) for frame in frames]  # Move tensors to CPU
-        from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
-        clip = ImageSequenceClip(arrs, fps=fps)
-        done = False
-        priority = [('avi', 'png'), ('avi', 'rawvideo'), ('mp4', 'libx264'), ('webm', 'libvpx')]
-        if colorvids_bitrate:
-            priority = reversed(priority)
-        for v_format, codec in priority:
+    try:
+        if frames[0].mode == 'I;16':
+            import imageio_ffmpeg
+            writer = imageio_ffmpeg.write_frames(
+                os.path.join(path, f"{name}.avi"), frames[0].size, 'gray16le', 'gray16le', fps, codec='ffv1',
+                macro_block_size=1)
             try:
-                br = f'{colorvids_bitrate}k' if codec not in ['png', 'rawvideo'] else None
-                clip.write_videofile(os.path.join(path, f"{name}.{v_format}"), codec=codec, bitrate=br)
-                done = True
-                break
-            except Exception as e:
-                print(f"Exception: {e} - Failed to save video in format {v_format} with codec {codec}")
-                traceback.print_exc()
-        if not done:
-            raise Exception('Saving the video failed!')
+                writer.send(None)
+                for frame in frames:
+                    writer.send(np.array(frame.cpu()) if isinstance(frame, torch.Tensor) else np.array(frame))
+            finally:
+                writer.close()
+        else:
+            arrs = [np.asarray(frame.cpu()) if isinstance(frame, torch.Tensor) else np.asarray(frame) for frame in frames]
+            from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
+            clip = ImageSequenceClip(arrs, fps=fps)
+            done = False
+            priority = [('avi', 'png'), ('avi', 'rawvideo'), ('mp4', 'libx264'), ('webm', 'libvpx')]
+            if colorvids_bitrate:
+                priority = reversed(priority)
+            for v_format, codec in priority:
+                try:
+                    br = f'{colorvids_bitrate}k' if codec not in ['png', 'rawvideo'] else None
+                    clip.write_videofile(os.path.join(path, f"{name}.{v_format}"), codec=codec, bitrate=br)
+                    done = True
+                    break
+                except Exception as e:
+                    print(f"Exception: {e} - Failed to save video in format {v_format} with codec {codec}")
+                    traceback.print_exc()
+            if not done:
+                raise Exception('Saving the video failed!')
+    except Exception as e:
+        print(f"Error in frames_to_video: {e}")
+        raise
 
 def process_predictions(predictions, smoothening='none'):
     def global_scaling(objs, a=None, b=None):
