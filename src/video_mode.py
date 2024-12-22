@@ -166,7 +166,9 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
             inp[go.STEREO_MODES.name.lower()], inp[go.STEREO_BALANCE.name.lower()],
             inp[go.STEREO_OFFSET_EXPONENT.name.lower()], inp[go.STEREO_FILL_ALGO.name.lower()]
         )
-        stereo_images.append(Image.fromarray(stereo_image[0].numpy()))  # Convert back to PIL Image
+        stereo_image_np = np.array(stereo_image[0].numpy()) # NumPyの配列に変換
+        stereo_image.append(Image.fromarray(stereo_image_np))
+        #stereo_images.append(Image.fromarray(stereo_image[0].numpy()))  # Convert back to PIL Image
 
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
     
