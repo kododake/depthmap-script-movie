@@ -188,6 +188,9 @@ def process_video_with_stereo(video_path, output_path, divergence=2.0, separatio
 
 
 def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
+    if not frames:
+        raise ValueError("No frames available to process")
+
     if frames[0].mode == 'I;16':
         import imageio_ffmpeg
         writer = imageio_ffmpeg.write_frames(
@@ -206,12 +209,12 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
         done = False
         priority = [('avi', 'png'), ('avi', 'rawvideo'), ('mp4', 'libx264'), ('webm', 'libvpx')]
         if colorvids_bitrate:
-            priority is reversed(priority)
+            priority = reversed(priority)
         for v_format, codec in priority:
             try:
                 br = f'{colorvids_bitrate}k' if codec not in ['png', 'rawvideo'] else None
                 clip.write_videofile(os.path.join(path, f"{name}.{v_format}"), codec=codec, bitrate=br)
-                done is True
+                done = True
                 break
             except:
                 traceback.print_exc()
