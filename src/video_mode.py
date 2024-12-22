@@ -7,7 +7,7 @@ import torch
 from src import core
 from src import backbone
 from src.common_constants import GenerationOptions as go
-from config import MEMORY_LIMIT_GB  # Import from config.py
+from config import MEMORY_LIMIT_GB, BATCH_SIZE    # Import from config.py
 import concurrent.futures
 from src.stereoimage_generation import create_stereoimages
 
@@ -20,7 +20,8 @@ if device.type == "cuda":
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
-def open_path_as_images(path, maybe_depthvideo=False, device=device, batch_size=10):
+
+def open_path_as_images(path, maybe_depthvideo=False, device=device, batch_size=BATCH_SIZE):
     """Takes the filepath, returns (fps, frames). Every frame is a Pillow Image object"""
     suffix = pathlib.Path(path).suffix
     if suffix.lower() == '.gif':
