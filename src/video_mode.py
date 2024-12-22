@@ -100,7 +100,7 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
             gen_obj = core.core_generation_funnel(None, input_images, None, None, first_pass_inp)
             input_depths = [x[2] for x in list(gen_obj)]
             input_depths = process_predicitons(input_depths, smoothening)
-            process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate)
+            process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap)
     else:
         print('Using custom depthmap video')
         for fps, input_images in open_path_as_images(os.path.abspath(video_path), device=device):
@@ -113,7 +113,7 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
     print('All done. Video(s) saved!')
     return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
 
-def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate):
+def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
     print('Generating output frames')
     img_results = list(core.core_generation_funnel(None, input_images, input_depths, None, inp))
     gens = list(set(map(lambda x: x[1], img_results)))
