@@ -197,7 +197,7 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
         # Ensure frames are in the correct format
         if isinstance(frames[0], torch.Tensor):
             frames = [Image.fromarray(frame.cpu().numpy()) for frame in frames]
-        
+
         if frames[0].mode == 'I;16':
             import imageio_ffmpeg
             writer = imageio_ffmpeg.write_frames(
