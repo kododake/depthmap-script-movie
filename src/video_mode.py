@@ -170,6 +170,7 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
 
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
     
+    
 def process_video_with_stereo(video_path, output_path, divergence=2.0, separation=0.5, modes=['left-right'], stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
     fps, frames = open_path_as_images(video_path, device=device)
     stereo_frames = []
