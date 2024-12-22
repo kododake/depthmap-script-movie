@@ -11,7 +11,6 @@ from config import MEMORY_LIMIT_GB  # Import from config.py
 import concurrent.futures
 from src.stereoimage_generation import create_stereoimages
 
-
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -119,8 +118,7 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
             process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate)
 
     print('All done. Video(s) saved!')
-    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
-
+    return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens == 1) else '<h3>Nothing generated - please check the settings and try again</h3>'
 
 
 def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
@@ -167,7 +165,6 @@ def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bi
         stereo_images.append(stereo_image[0].cpu())  # Move back to CPU for saving
 
     frames_to_video(fps, stereo_images, outpath, 'stereo_video')
-    
 
 
 def process_video_with_stereo(video_path, output_path, divergence=2.0, separation=0.5, modes=['left-right'], stereo_balance=0.0, stereo_offset_exponent=1.0, fill_technique='polylines_sharp'):
@@ -179,6 +176,9 @@ def process_video_with_stereo(video_path, output_path, divergence=2.0, separatio
         stereo_frames.append(stereo_image[0])
     frames_to_video(fps, stereo_frames, output_path, 'stereo_video')
 
+
+
+
 def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
     if frames[0].mode == 'I;16':
         import imageio_ffmpeg
@@ -188,11 +188,11 @@ def frames_to_video(fps, frames, path, name, colorvids_bitrate=None):
         try:
             writer.send(None)
             for frame in frames:
-                writer.send(np.array(frame))
+                writer.send(np.array(frame.cpu()) if isinstance(frame, torch.Tensor) else np.array(frame))
         finally:
             writer.close()
     else:
-        arrs = [np.asarray(frame) for frame in frames]
+        arrs = [np.asarray(frame.cpu()) if isinstance(frame, torch.Tensor) else np.asarray(frame) for frame in frames]  # Move tensors to CPU
         from moviepy.video.io.ImageSequenceClip import ImageSequenceClip
         clip = ImageSequenceClip(arrs, fps=fps)
         done = False
