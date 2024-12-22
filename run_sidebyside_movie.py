@@ -10,7 +10,7 @@ if device.type == "cuda":
     torch.cuda.set_per_process_memory_fraction(7.3*10**9 / torch.cuda.get_device_properties(0).total_memory)
 
 input_video_path = input("Input video path: ")
-output_path = "."
+output_path = "outputs"  # Change output path to 'outputs' directory
 
 generation_options = {
     go.STEREO_DIVERGENCE.name.lower(): 2.0,
