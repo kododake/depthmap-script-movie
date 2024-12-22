@@ -97,8 +97,9 @@ def apply_stereo_divergence(original_image, depth, divergence, separation, stere
     divergence_px = (divergence / 100.0) * original_image.shape[1]
     separation_px = (separation / 100.0) * original_image.shape[1]
 
-    normalized_depth = normalized_depth.cpu().numpy()
-    original_image = original_image.cpu().numpy()
+    # Convert tensors to numpy arrays for further processing
+    normalized_depth = normalized_depth.cpu().numpy() if isinstance(normalized_depth, torch.Tensor) else normalized_depth
+    original_image = original_image.cpu().numpy() if isinstance(original_image, torch.Tensor) else original_image
 
     if fill_technique in ['none', 'naive', 'naive_interpolating']:
         return apply_stereo_divergence_naive(
@@ -108,7 +109,6 @@ def apply_stereo_divergence(original_image, depth, divergence, separation, stere
         return apply_stereo_divergence_polylines(
             original_image, normalized_depth, divergence_px, separation_px, stereo_offset_exponent, fill_technique
         )
-
 
 @njit(parallel=False)
 def apply_stereo_divergence_naive(
