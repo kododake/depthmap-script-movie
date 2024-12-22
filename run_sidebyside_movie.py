@@ -3,12 +3,15 @@ import asyncio
 from src.video_mode import gen_video
 from src.common_constants import GenerationOptions as go
 
+# Global variable for memory limit
+MEMORY_LIMIT_GB = 7.3
+
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Set memory limit to 7.3GB
 if device.type == "cuda":
-    torch.cuda.set_per_process_memory_fraction(7.3*10**9 / torch.cuda.get_device_properties(0).total_memory)
+    torch.cuda.set_per_process_memory_fraction(MEMORY_LIMIT_GB * 10**9 / torch.cuda.get_device_properties(0).total_memory)
 
 input_video_path = input("Input video path: ")
 output_path = "outputs"  # Change output path to 'outputs' directory
