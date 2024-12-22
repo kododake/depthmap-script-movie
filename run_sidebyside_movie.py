@@ -37,6 +37,7 @@ async def main():
     loop = asyncio.get_running_loop()
 
     # Handle case where custom depthmap is not provided
+    global custom_depthmap  # Use global declaration
     if not custom_depthmap:
         custom_depthmap = None
 
