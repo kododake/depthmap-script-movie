@@ -7,9 +7,11 @@ from config import MEMORY_LIMIT_GB  # Import from config.py
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Set memory limit
+# Adjust memory limit dynamically
 if device.type == "cuda":
-    torch.cuda.set_per_process_memory_fraction(MEMORY_LIMIT_GB * 10**9 / torch.cuda.get_device_properties(0).total_memory)
+    total_memory = torch.cuda.get_device_properties(0).total_memory
+    memory_limit_gb = min(MEMORY_LIMIT_GB, total_memory / 10**9 * 0.8)  # Use 80% of total memory if it is lower
+    torch.cuda.set_per_process_memory_fraction(memory_limit_gb * 10**9 / total_memory)
 
 input_video_path = input("Input video path: ")
 output_path = "outputs"  # Change output path to 'outputs' directory
@@ -44,6 +46,9 @@ async def main():
     # Run gen_video in a separate thread to avoid blocking
     result = await loop.run_in_executor(None, gen_video, input_video_path, output_path, generation_options, custom_depthmap, device)
 
+    # Empty cache to free up unused VRAM
+    torch.cuda.empty_cache()
+    
     print(result)
 
 asyncio.run(main())
