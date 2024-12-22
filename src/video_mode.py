@@ -83,6 +83,11 @@ def open_path_as_images(path, maybe_depthvideo=False, device=device, batch_size=
         except Exception as e:
             raise Exception(f"Probably an unsupported file format: {suffix}") from e
 
+# Ensure PyTorch uses GPU if available
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Modify stereo image generation to use GPU
+
 def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=None, smoothening='none', device=device):
     # Ensure all necessary keys are in the inp dictionary
     required_keys = [go.GEN_SIMPLE_MESH.name.lower(), go.GEN_INPAINTED_MESH.name.lower()]
