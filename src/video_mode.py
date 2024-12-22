@@ -8,8 +8,15 @@ from src import core
 from src import backbone
 from src.common_constants import GenerationOptions as go
 
+# Import the global memory limit variable
+from run_sidebyside_movie import MEMORY_LIMIT_GB
+
 # Ensure PyTorch uses GPU if available
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Set memory limit based on the global variable
+if device.type == "cuda":
+    torch.cuda.set_per_process_memory_fraction(MEMORY_LIMIT_GB * 10**9 / torch.cuda.get_device_properties(0).total_memory)
 
 from moviepy.video.io.VideoFileClip import VideoFileClip
 
@@ -112,7 +119,6 @@ def gen_video(video_path, outpath, inp, custom_depthmap=None, colorvids_bitrate=
 
     print('All done. Video(s) saved!')
     return '<h3>Videos generated</h3>' if len(gens) > 1 else '<h3>Video generated</h3>' if len(gens) == 1 else '<h3>Nothing generated - please check the settings and try again</h3>'
-
 def process_and_save(input_images, input_depths, fps, outpath, inp, colorvids_bitrate, custom_depthmap=None):
     print('Generating output frames')
     img_results = list(core.core_generation_funnel(None, input_images, input_depths, None, inp))
